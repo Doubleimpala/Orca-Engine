@@ -3,7 +3,6 @@ from discord import app_commands
 import os
 from dotenv import load_dotenv
 import aiohttp
-from capstone import *
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -11,7 +10,12 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 def decompile_binary(message, attachment):
-    pass
+    name = attachment.filename
+    root, extension = os.path.splitext(name)
+    if extension != ".dll"  and extension != ".exe" and extension != ".so" and extension != ".bin":
+        print("invalid")
+        return ""
+    return discord.File()
 
 @client.event
 async def on_ready():
@@ -42,8 +46,16 @@ async def on_message(message):
                 color=discord.Color.purple()
             )
             await message.channel.send(embed=embed_var)
-            message.channel.send(content="Here is the deassembled code in `.asm` format.",file=decompile_binary(message=message,attachment=attachment))
-
+            file = decompile_binary(message=message,attachment=attachment)
+            if file != "":
+                await message.channel.send(content="Here is the deassembled code in `.asm` format.",file=file)
+            else:
+                embed_var = discord.Embed(
+                    title="Invalid Input.",
+                    description="`.exe`, `.bin`, `.dll`, and `.so` files are supported.",
+                    color=discord.Color.purple()
+                )
+                await message.channel.send(embed=embed_var)
 
 @tree.command(
     name="decompile",
